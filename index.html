@@ -1,10 +1,39 @@
-// Configuración para EVENTO 1
-var url = "https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Evento 1</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        video { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
 
-var protectionData = {
-    "org.w3.clearkey": {
-        "clearkeys": {
-            "1a3297669d2a45059639527581691176": "29124032a39649988a07c1340a6e0012"
-        }
-    }
-};
+    <video id="videoPlayer" controls autoplay></video>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            [span_0](start_span)// Datos del canal EVENTO 1[span_0](end_span)
+            [span_1](start_span)var url = "https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd";[span_1](end_span)
+            
+            var videoElement = document.querySelector("#videoPlayer");
+            var player = dashjs.MediaPlayer().create();
+
+            [span_2](start_span)// Configuración de llaves ClearKey extraídas de tu lista[span_2](end_span)
+            var protectionData = {
+                "org.w3.clearkey": {
+                    "clearkeys": {
+                        "1a3297669d2a45059639527581691176": "29124032a39649988a07c1340a6e0012"
+                    }
+                }
+            };
+
+            player.setProtectionData(protectionData);
+            player.initialize(videoElement, url, true);
+        });
+    </script>
+</body>
+</html>
