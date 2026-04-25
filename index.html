@@ -3,37 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor Evento 1</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js"></script>
+    <title>Player Pro - Proyect</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; }
+        #video-container { width: 100%; height: 100%; }
         video { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
-
-    <video id="videoPlayer" controls autoplay></video>
+    <div id="video-container">
+        <video id="video" controls autoplay crossorigin="anonymous"></video>
+    </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            [span_0](start_span)// Datos del canal EVENTO 1[span_0](end_span)
-            [span_1](start_span)var url = "https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd";[span_1](end_span)
-            
-            var videoElement = document.querySelector("#videoPlayer");
-            var player = dashjs.MediaPlayer().create();
+        async function initPlayer() {
+            const video = document.getElementById('video');
+            const player = new shaka.Player(video);
 
-            [span_2](start_span)// Configuración de llaves ClearKey extraídas de tu lista[span_2](end_span)
-            var protectionData = {
-                "org.w3.clearkey": {
-                    "clearkeys": {
-                        "1a3297669d2a45059639527581691176": "29124032a39649988a07c1340a6e0012"
+            [span_2](start_span)// 1. Configuración de Llaves ClearKey (Evento 1)[span_2](end_span)
+            player.configure({
+                drm: {
+                    clearKeys: {
+                        '1a3297669d2a45059639527581691176': '29124032a39649988a07c1340a6e0012'
                     }
                 }
-            };
+            });
 
-            player.setProtectionData(protectionData);
-            player.initialize(videoElement, url, true);
-        });
+            [span_3](start_span)// 2. Configuración de Headers (Simulando a Killermina/El Verruca)[span_3](end_span)
+            player.getNetworkingEngine().registerRequestFilter(function(type, request) {
+                if (type == shaka.net.NetworkingEngine.RequestType.MANIFEST || 
+                    type == shaka.net.NetworkingEngine.RequestType.SEGMENT) {
+                    
+                    [span_4](start_span)// Añadimos el Referer y Origin necesarios[span_4](end_span)
+                    request.headers['Origin'] = 'https://elverruca.tech';
+                    request.headers['Referer'] = 'https://elverruca.tech/';
+                    [span_5](start_span)// Añadimos el User-Agent capturado en tu archivo[span_5](end_span)
+                    request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+                }
+            });
+
+            try {
+                [span_6](start_span)// 3. Carga del flujo MPD[span_6](end_span)
+                await player.load('https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd');
+                console.log('El video se cargó correctamente');
+            } catch (e) {
+                console.error('Error al cargar el video', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPlayer);
     </script>
 </body>
 </html>
