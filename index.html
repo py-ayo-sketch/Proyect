@@ -1,40 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor 5 DÍAS PY</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js"></script>
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-    </style>
-</head>
-<body>
+// Configuración para EVENTO 1
+var url = "https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd";
 
-    <video id="videoPlayer" controls autoplay crossorigin="anonymous"></video>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            [span_1](start_span)// URL del canal con el marcador de token[span_1](end_span)
-            // Nota: El '*' debe reemplazarse por el token real de sesión si el servidor da error 403.
-            var url = "https://cdn.cvattv.com.ar/live/c4eds/5_Dias_PY/SA_Live_dash_enc/5_Dias_PY.mpd?*";
-            
-            var videoElement = document.querySelector("#videoPlayer");
-            var player = dashjs.MediaPlayer().create();
-
-            [span_2](start_span)// Configuración de protección ClearKey[span_2](end_span)
-            var protectionData = {
-                "org.w3.clearkey": {
-                    "clearkeys": {
-                        "746091c502edcf1e9d003535ce01f3e4": "29081b5f92d1a37c88fbbd0ece55c839"
-                    }
-                }
-            };
-
-            player.setProtectionData(protectionData);
-            player.initialize(videoElement, url, true);
-        });
-    </script>
-</body>
-</html>
+var protectionData = {
+    "org.w3.clearkey": {
+        "clearkeys": {
+            "1a3297669d2a45059639527581691176": "29124032a39649988a07c1340a6e0012"
+        }
+    }
+};
