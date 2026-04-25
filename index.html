@@ -3,56 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Pro - Proyect</title>
+    <title>Ayo Player Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; }
-        #video-container { width: 100%; height: 100%; }
-        video { width: 100%; height: 100%; }
+        body, html { margin: 0; padding: 0; background-color: #0f0f0f; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+        #player-wrapper { width: 100%; background: #000; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #2ecc71; }
+        video { width: 100%; aspect-ratio: 16 / 9; object-fit: contain; }
+        #status-bar { padding: 10px; font-size: 13px; text-align: center; background: #1a1a1a; color: #2ecc71; font-weight: bold; border-bottom: 1px solid #333; }
+        #channels-container { flex: 1; overflow-y: auto; padding: 15px; }
+        .category-title { font-size: 18px; font-weight: bold; margin: 25px 0 12px 0; color: #2ecc71; display: flex; align-items: center; gap: 12px; border-left: 4px solid #2ecc71; padding-left: 10px; }
+        .category-title img { width: 28px; height: 28px; object-fit: contain; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+        .channel-card { background: #1e1e1e; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; border: 1px solid #222; transition: 0.3s; }
+        .channel-card:active { transform: scale(0.92); background: #2ecc71; }
+        .channel-card img { width: 100%; height: 60px; object-fit: contain; margin-bottom: 10px; }
+        .channel-card span { font-size: 11px; font-weight: 600; color: #eee; display: block; height: 30px; overflow: hidden; }
     </style>
 </head>
 <body>
-    <div id="video-container">
+
+    <div id="player-wrapper">
         <video id="video" controls autoplay crossorigin="anonymous"></video>
+        <div id="status-bar">Selecciona un canal para iniciar la transmisión</div>
     </div>
 
+    <div id="channels-container"></div>
+
     <script>
-        async function initPlayer() {
+        // Base de Datos de Canales integrada desde makanada.json
+        const db = [
+{
+    "type": "category",
+    "image": "https://i.ibb.co/5X20hxjL/KN-copia-4.png",
+    "title": "🇵🇾TIGO SPORTS🇵🇾",
+    "items": [
+        {"name": "CERRO VS LIBERTAD", "url": "https://4zeu518ua.s3.us-east-1.amazonaws.com/live/stream10/index.m3u8", "icono": "https://i.postimg.cc/d08sznwn/dd6c90a2-7550-40c9-9e02-e97a73031199.jpg", "type": "hls"},
+        {"name": "EVENTO 1", "url": "https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd", "icono": "https://i.ibb.co/Cs77Ttc7/tig-rezise.png", "type": "CLEARKEY", "drm_license_uri": "https://dl.dropboxusercontent.com/scl/fi/bify73qa6pam1h5op5mg4/tigo3.json?rlkey=r2r6qmvzobpn1tib3n068ap1z"},
+        {"name": "EVENTOS PLUS", "url": "https://d2jluxxgx550su.cloudfront.net/out/v1/62de20495af84f908fa8963f50c44d46/index.mpd", "icono": "https://i.ibb.co/Cs77Ttc7/tig-rezise.png", "type": "CLEARKEY", "drm_license_uri": "https://dl.dropbox.com/scl/fi/wbw3yya7vk1f3ivn650ug/tigo4.txt?rlkey=ozbktawdgz3ir2ydtm4qez3om"},
+        {"name": "TIGO WEB 1", "url": "https://killermina.github.io/mi-player-html/", "icono": "https://i.ibb.co/1fZk2KkT/KN-rezice.png", "type": "webview"}
+    ]
+},
+{
+    "type": "category",
+    "image": "https://i.ibb.co/k6cgFLwt/paraguay.png",
+    "title": "🇵🇾PARAGUAY🇵🇾",
+    "items": [
+        {"name": "GEN TV", "url": "https://rds3gen.desdeparaguay.net/gentv/gentv_py_alta/chunklist.m3u8?admin=nacion", "icono": "https://i0.wp.com/television.com.py/wp-content/uploads/2020/10/LogoGENtvpy.jpg", "type": "hls"},
+        {"name": "TELEFUTURO", "url": "https://copacogen.desdeparaguay.net/telefuturo/telefuturo_py_alta/index.m3u8?admin=tvaccion", "icono": "https://i.ibb.co/Hp9jRYsP/telefuturo-new-logo-2022.png", "type": "hls"},
+        {"name": "C9N", "url": "https://d2qsan2ut81n2k.cloudfront.net/live/48f53430-9014-4459-a048-6169dac14140/ts:abr.m3u8", "icono": "https://i.ibb.co/Z6y9wbMT/330x330-logo-grande-C9-N.png", "type": "hls"},
+        {"name": "SNT", "url": "https://alba-py-snt-snt.stream.mediatiquestream.com/index.m3u8", "icono": "https://i.postimg.cc/L5h8p4C4/snt.png", "type": "hls"},
+        {"name": "5 DIAS PY", "url": "https://cdn.cvattv.com.ar/live/c4eds/5_Dias_PY/SA_Live_dash_enc/5_Dias_PY.mpd?*", "icono": "https://i.ibb.co/cXhyvZGC/R-1.png", "type": "CLEARKEY", "drm_license_uri": "https://vercel-php-clearkey-hex-base64-json.vercel.app/api/results.php?keyid=746091c502edcf1e9d003535ce01f3e4&key=29081b5f92d1a37c88fbbd0ece55c839"}
+    ]
+},
+{
+    "type": "category",
+    "image": "https://i.ibb.co/9mkcw2dN/espn-seeklogo.png",
+    "title": "⚽ ESPN ⚽",
+    "items": [
+        {"name": "ESPN", "url": "http://45.184.109.10/live/69393EAE6ADBC65A68F942022362A202/89.m3u8", "icono": "https://assetshuluimcom-a.akamaihd.net/h3o/landing/networks/wall/espn-network-logo.png", "type": "hls"},
+        {"name": "ESPN PREMIUM", "url": "http://magmaplayer.com/stream/secure/Zmp1KmDjBS8kZmthAGxhZwV0YwHlKmR3AwZkZwL1AQEsLJV2ZmAzAGp1MTEzMwqvLy8j.m3u8", "icono": "https://d18o29lhcg4kda.cloudfront.net/fit-in/360x270/Y2gwMTAwMDAwMDAwMTc5X2xpbmVhcl9jaGFubmVsX3NzbGE_11002_LOGO_360x270.png", "type": "hls"}
+    ]
+}
+        ];
+
+        let player;
+
+        async function initApp() {
+            shaka.polyfill.installAll();
             const video = document.getElementById('video');
-            const player = new shaka.Player(video);
+            player = new shaka.Player(video);
 
-            [span_2](start_span)// 1. Configuración de Llaves ClearKey (Evento 1)[span_2](end_span)
-            player.configure({
-                drm: {
-                    clearKeys: {
-                        '1a3297669d2a45059639527581691176': '29124032a39649988a07c1340a6e0012'
-                    }
-                }
+            player.getNetworkingEngine().registerRequestFilter((type, request) => {
+                request.headers['Origin'] = 'https://elverruca.tech';
+                request.headers['Referer'] = 'https://elverruca.tech/';
             });
 
-            [span_3](start_span)// 2. Configuración de Headers (Simulando a Killermina/El Verruca)[span_3](end_span)
-            player.getNetworkingEngine().registerRequestFilter(function(type, request) {
-                if (type == shaka.net.NetworkingEngine.RequestType.MANIFEST || 
-                    type == shaka.net.NetworkingEngine.RequestType.SEGMENT) {
-                    
-                    [span_4](start_span)// Añadimos el Referer y Origin necesarios[span_4](end_span)
-                    request.headers['Origin'] = 'https://elverruca.tech';
-                    request.headers['Referer'] = 'https://elverruca.tech/';
-                    [span_5](start_span)// Añadimos el User-Agent capturado en tu archivo[span_5](end_span)
-                    request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
-                }
+            renderChannels();
+        }
+
+        function renderChannels() {
+            const container = document.getElementById('channels-container');
+            db.forEach(category => {
+                const catTitle = document.createElement('div');
+                catTitle.className = 'category-title';
+                catTitle.innerHTML = `<img src="${category.image}"> ${category.title}`;
+                container.appendChild(catTitle);
+
+                const grid = document.createElement('div');
+                grid.className = 'grid';
+                category.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'channel-card';
+                    card.innerHTML = `<img src="${item.icono}"> <span>${item.name}</span>`;
+                    card.onclick = () => loadChannel(item);
+                    grid.appendChild(card);
+                });
+                container.appendChild(grid);
             });
+        }
+
+        async function loadChannel(item) {
+            const status = document.getElementById('status-bar');
+            status.innerText = `Cargando: ${item.name}...`;
+
+            if (item.type === 'webview') {
+                window.open(item.url, '_blank');
+                return;
+            }
 
             try {
-                [span_6](start_span)// 3. Carga del flujo MPD[span_6](end_span)
-                await player.load('https://d3kzwqwnq1f7tq.cloudfront.net/out/v1/25ca218d53194065bedf6d998ace462e/index.mpd');
-                console.log('El video se cargó correctamente');
-            } catch (e) {
-                console.error('Error al cargar el video', e);
+                player.configure({ drm: { clearKeys: {} } });
+
+                if (item.type === 'CLEARKEY' && item.drm_license_uri) {
+                    const urlObj = new URL(item.drm_license_uri);
+                    const kid = urlObj.searchParams.get('keyid') || "746091c502edcf1e9d003535ce01f3e4";
+                    const key = urlObj.searchParams.get('key') || "29081b5f92d1a37c88fbbd0ece55c839";
+                    
+                    player.configure({ drm: { clearKeys: { [kid]: key } } });
+                }
+
+                await player.load(item.url);
+                status.innerText = `Reproduciendo: ${item.name}`;
+            } catch (error) {
+                status.innerText = `Error: ${item.name} requiere Token activo`;
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initPlayer);
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
